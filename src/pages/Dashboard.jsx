@@ -1,0 +1,116 @@
+import { useContext, useEffect, useState } from "react";
+import { WarehouseContext } from "../context/WarehouseContext";
+import StatCard from "../components/StatCard";
+import {
+  IconBox, IconTag, IconTruck, IconOrders, IconLayers, IconCash,
+  IconTrendUp, IconWastage, IconClock, IconGauge, IconRefresh, IconAlert
+} from "../components/icons";
+
+const money = (n) => `Rs. ${Number(n || 0).toLocaleString("en-PK", { maximumFractionDigits: 0 })}`;
+
+export default function Dashboard() {
+  const { getDashboardSummary, getCategoryById } = useContext(WarehouseContext);
+  const [summary, setSummary] = useState(null);
+
+  const load = () => setSummary(getDashboardSummary());
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+
+  if (!summary) return null;
+
+  const stats = [
+    { icon: <IconBox />, label: "Total Products", value: summary.totalProducts, accent: "#ff9d2e", accentSoft: "rgba(255,157,46,.14)" },
+    { icon: <IconTag />, label: "Categories", value: summary.totalCategories, accent: "#4da3ff", accentSoft: "rgba(77,163,255,.14)" },
+    { icon: <IconTruck />, label: "Suppliers", value: summary.totalSuppliers, accent: "#4da3ff", accentSoft: "rgba(77,163,255,.14)" },
+    { icon: <IconOrders />, label: "Total Orders", value: summary.totalOrders, accent: "#c084fc", accentSoft: "rgba(192,132,252,.16)" },
+    { icon: <IconLayers />, label: "Units In Stock", value: summary.totalStock, accent: "#3ddc97", accentSoft: "rgba(61,220,151,.14)" },
+    { icon: <IconCash />, label: "Revenue", value: money(summary.revenue), accent: "#ff9d2e", accentSoft: "rgba(255,157,46,.14)" },
+    { icon: <IconTrendUp />, label: "Total Profit", value: money(summary.totalProfit), accent: "#3ddc97", accentSoft: "rgba(61,220,151,.14)" },
+    { icon: <IconWastage />, label: "Wastage Loss", value: money(summary.totalLoss), accent: "#ff5470", accentSoft: "rgba(255,84,112,.14)" },
+    { icon: <IconClock />, label: "Pending Orders", value: summary.pendingOrders, accent: "#ffc169", accentSoft: "rgba(255,157,46,.14)" },
+    { icon: <IconGauge />, label: "Inventory Value", value: money(summary.inventoryValue), accent: "#4da3ff", accentSoft: "rgba(77,163,255,.14)" },
+  ];
+
+  return (
+    <div>
+      <div className="toolbar">
+        <div className="section-title" style={{ marginBottom: 0 }}>
+          <div>
+            <h2 style={{ fontSize: 18 }}>Warehouse Overview</h2>
+            <div className="hint">Live figures computed from local storage</div>
+          </div>
+        </div>
+        <button className="btn btn-ghost btn-sm" onClick={load}>
+          <IconRefresh /> Refresh
+        </button>
+      </div>
+
+      <div className="stat-grid">
+        {stats.map((s) => <StatCard key={s.label} {...s} />)}
+      </div>
+
+      <div className="grid-2">
+        <div className="panel panel-pad">
+          <div className="section-title">
+            <div>
+              <h2>Low Stock Alerts</h2>
+              <div className="hint">Products at or below the reorder threshold</div>
+            </div>
+            <span className="badge badge-bad"><IconAlert style={{ width: 12, height: 12 }} /> {summary.lowStockProducts.length}</span>
+          </div>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr><th>Product</th><th>Category</th><th>Qty Left</th></tr>
+              </thead>
+              <tbody>
+                {summary.lowStockProducts.length === 0 && (
+                  <tr className="empty-row"><td colSpan={3}>All stock levels look healthy.</td></tr>
+                )}
+                {summary.lowStockProducts.map((p) => {
+                  const cat = getCategoryById(p.categoryId);
+                  return (
+                    <tr key={p.id}>
+                      <td className="strong">{p.name}</td>
+                      <td>{cat ? cat.name : "—"}</td>
+                      <td><span className="badge badge-bad">{p.quantity} left</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="panel panel-pad">
+          <div className="section-title">
+            <div>
+              <h2>Snapshot</h2>
+              <div className="hint">Quick health check across the floor</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <SnapshotRow label="Wastage Events" value={summary.totalWastage} />
+            <SnapshotRow label="Pending Orders" value={summary.pendingOrders} total={summary.totalOrders || 1} />
+            <SnapshotRow label="Low Stock Items" value={summary.lowStockProducts.length} total={summary.totalProducts || 1} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SnapshotRow({ label, value, total }) {
+  const pct = total ? Math.min(100, Math.round((value / total) * 100)) : 0;
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13 }}>
+        <span className="muted">{label}</span>
+        <span className="strong" style={{ color: "var(--text)" }}>{value}</span>
+      </div>
+      {total ? (
+        <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
+      ) : null}
+    </div>
+  );
+}
