@@ -1,5 +1,5 @@
-import { useContext, useEffect, useState } from "react";
-import { WarehouseContext } from "../context/WarehouseContext";
+import { useState } from "react";
+import { useSelector } from "react-redux";
 import { IconReport } from "../components/icons";
 
 const TABS = [
@@ -13,32 +13,32 @@ const TABS = [
 ];
 
 export default function Reports() {
-  const {
-    getOrdersReport, getProductReport, getCategoryReport, getSupplierReport,
-    getStockInReport, getStockOutReport, getWestageReport, getProduct,
-  } = useContext(WarehouseContext);
+  const orders = useSelector((state) => state.orders);
+  const products = useSelector((state) => state.products);
+  const categories = useSelector((state) => state.categories);
+  const suppliers = useSelector((state) => state.suppliers);
+  const stockIn = useSelector((state) => state.stockIn);
+  const stockOut = useSelector((state) => state.stockOut);
+  const wastage = useSelector((state) => state.wastage);
 
   const [tab, setTab] = useState("orders");
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => { setProducts(getProduct()); /* eslint-disable-next-line */ }, []);
 
   const productName = (id) => products.find((p) => p.id === id)?.name || "Deleted product";
 
   const data = {
-    orders: getOrdersReport(),
-    products: getProductReport(),
-    categories: getCategoryReport(),
-    suppliers: getSupplierReport(),
-    stockIn: getStockInReport(),
-    stockOut: getStockOutReport(),
-    wastage: getWestageReport(),
+    orders,
+    products,
+    categories,
+    suppliers,
+    stockIn,
+    stockOut,
+    wastage,
   }[tab];
 
   return (
     <div>
       <div className="section-title">
-        <div><h2 style={{ fontSize: 18 }}>Reports</h2><div className="hint">Raw records straight from local storage, by module</div></div>
+        <div><h2 style={{ fontSize: 18 }}>Reports</h2><div className="hint">Raw records straight from the Redux store, by module</div></div>
       </div>
 
       <div className="pill-tabs">

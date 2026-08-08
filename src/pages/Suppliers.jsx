@@ -1,5 +1,6 @@
-import { useContext, useEffect, useState } from "react";
-import { WarehouseContext } from "../context/WarehouseContext";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addSupplier, updateSupplier, deleteSupplier } from "../store/thunks";
 import Modal from "../components/Modal";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { IconPlus, IconEdit, IconTrash, IconTruck } from "../components/icons";
@@ -7,16 +8,14 @@ import { IconPlus, IconEdit, IconTrash, IconTruck } from "../components/icons";
 const empty = { name: "", contactPerson: "", phone: "", email: "", address: "" };
 
 export default function Suppliers({ notify }) {
-  const { getSupplier, addSupplier, updateSupplier, deleteSupplier, getProduct } = useContext(WarehouseContext);
-  const [suppliers, setSuppliers] = useState([]);
-  const [products, setProducts] = useState([]);
+  const dispatch = useDispatch();
+  const suppliers = useSelector((state) => state.suppliers);
+  const products = useSelector((state) => state.products);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(empty);
   const [toDelete, setToDelete] = useState(null);
-
-  const load = () => { setSuppliers(getSupplier()); setProducts(getProduct()); };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
   const openAdd = () => { setEditing(null); setForm(empty); setModalOpen(true); };
   const openEdit = (s) => {
@@ -28,19 +27,17 @@ export default function Suppliers({ notify }) {
   const submit = (e) => {
     e.preventDefault();
     const payload = { ...form, name: form.name.trim() };
-    if (editing) { updateSupplier({ ...editing, ...payload }); notify("Supplier updated"); }
-    else { addSupplier(payload); notify("Supplier added"); }
+    if (editing) { dispatch(updateSupplier({ ...editing, ...payload })); notify("Supplier updated"); }
+    else { dispatch(addSupplier(payload)); notify("Supplier added"); }
     setModalOpen(false);
-    load();
   };
 
   const countFor = (id) => products.filter((p) => p.supplierId === id).length;
 
   const confirmDelete = () => {
-    deleteSupplier(toDelete.id);
+    dispatch(deleteSupplier(toDelete.id));
     notify("Supplier removed");
     setToDelete(null);
-    load();
   };
 
   return (

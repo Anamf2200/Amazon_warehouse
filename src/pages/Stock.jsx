@@ -1,12 +1,14 @@
-import { useContext, useEffect, useState } from "react";
-import { WarehouseContext } from "../context/WarehouseContext";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { stockIn, stockOut } from "../store/thunks";
 import { IconArrowDown, IconArrowUp, IconInbox } from "../components/icons";
 
 export default function Stock({ notify }) {
-  const { stockIn, stockOut, getProduct, getStockInReport, getStockOutReport } = useContext(WarehouseContext);
-  const [products, setProducts] = useState([]);
-  const [stockInHistory, setStockInHistory] = useState([]);
-  const [stockOutHistory, setStockOutHistory] = useState([]);
+  const dispatch = useDispatch();
+  const products = useSelector((state) => state.products);
+  const stockInHistory = useSelector((state) => state.stockIn);
+  const stockOutHistory = useSelector((state) => state.stockOut);
+
   const [tab, setTab] = useState("in");
 
   const [inForm, setInForm] = useState({ productId: "", quantity: "" });
@@ -14,23 +16,15 @@ export default function Stock({ notify }) {
   const [inError, setInError] = useState("");
   const [outError, setOutError] = useState("");
 
-  const load = () => {
-    setProducts(getProduct());
-    setStockInHistory(getStockInReport());
-    setStockOutHistory(getStockOutReport());
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
-
   const productName = (id) => products.find((p) => p.id === id)?.name || "Deleted product";
 
   const submitIn = (e) => {
     e.preventDefault();
     setInError("");
     try {
-      stockIn(Number(inForm.productId), Number(inForm.quantity));
+      dispatch(stockIn(Number(inForm.productId), Number(inForm.quantity)));
       notify("Stock added");
       setInForm({ productId: "", quantity: "" });
-      load();
     } catch (err) { setInError(err.message); }
   };
 
@@ -38,10 +32,9 @@ export default function Stock({ notify }) {
     e.preventDefault();
     setOutError("");
     try {
-      stockOut(Number(outForm.productId), Number(outForm.quantity));
+      dispatch(stockOut(Number(outForm.productId), Number(outForm.quantity)));
       notify("Stock removed");
       setOutForm({ productId: "", quantity: "" });
-      load();
     } catch (err) { setOutError(err.message); }
   };
 

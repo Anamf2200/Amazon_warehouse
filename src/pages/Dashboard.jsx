@@ -1,22 +1,18 @@
-import { useContext, useEffect, useState } from "react";
-import { WarehouseContext } from "../context/WarehouseContext";
+import { useSelector } from "react-redux";
+import { selectDashboardSummary, selectCategories } from "../store/selectors";
 import StatCard from "../components/StatCard";
 import {
   IconBox, IconTag, IconTruck, IconOrders, IconLayers, IconCash,
-  IconTrendUp, IconWastage, IconClock, IconGauge, IconRefresh, IconAlert
+  IconTrendUp, IconWastage, IconClock, IconGauge, IconAlert
 } from "../components/icons";
 
 const money = (n) => `Rs. ${Number(n || 0).toLocaleString("en-PK", { maximumFractionDigits: 0 })}`;
 
 export default function Dashboard() {
-  const { getDashboardSummary, getCategoryById } = useContext(WarehouseContext);
-  const [summary, setSummary] = useState(null);
+  const summary = useSelector(selectDashboardSummary);
+  const categories = useSelector(selectCategories);
 
-  const load = () => setSummary(getDashboardSummary());
-
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
-
-  if (!summary) return null;
+  const getCategoryById = (id) => categories.find((c) => c.id == id);
 
   const stats = [
     { icon: <IconBox />, label: "Total Products", value: summary.totalProducts, accent: "#ff9d2e", accentSoft: "rgba(255,157,46,.14)" },
@@ -37,12 +33,9 @@ export default function Dashboard() {
         <div className="section-title" style={{ marginBottom: 0 }}>
           <div>
             <h2 style={{ fontSize: 18 }}>Warehouse Overview</h2>
-            <div className="hint">Live figures computed from local storage</div>
+            <div className="hint">Live figures computed from the Redux store</div>
           </div>
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={load}>
-          <IconRefresh /> Refresh
-        </button>
       </div>
 
       <div className="stat-grid">

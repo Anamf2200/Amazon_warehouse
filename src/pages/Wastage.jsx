@@ -1,16 +1,15 @@
-import { useContext, useEffect, useState } from "react";
-import { WarehouseContext } from "../context/WarehouseContext";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { wastage } from "../store/thunks";
 import { IconWastage } from "../components/icons";
 
 export default function Wastage({ notify }) {
-  const { wastage, getProduct, getWestageReport } = useContext(WarehouseContext);
-  const [products, setProducts] = useState([]);
-  const [history, setHistory] = useState([]);
+  const dispatch = useDispatch();
+  const products = useSelector((state) => state.products);
+  const history = useSelector((state) => state.wastage);
+
   const [form, setForm] = useState({ productId: "", quantity: "" });
   const [error, setError] = useState("");
-
-  const load = () => { setProducts(getProduct()); setHistory(getWestageReport()); };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
   const productName = (id) => products.find((p) => p.id === id)?.name || "Deleted product";
 
@@ -18,10 +17,9 @@ export default function Wastage({ notify }) {
     e.preventDefault();
     setError("");
     try {
-      wastage(Number(form.productId), Number(form.quantity));
+      dispatch(wastage(Number(form.productId), Number(form.quantity)));
       notify("Wastage recorded");
       setForm({ productId: "", quantity: "" });
-      load();
     } catch (err) { setError(err.message); }
   };
 

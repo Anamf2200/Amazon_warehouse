@@ -1,5 +1,6 @@
-import { useContext, useEffect, useState } from "react";
-import { WarehouseContext } from "../context/WarehouseContext";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addCategory, updateCategory, deleteCategory } from "../store/thunks";
 import Modal from "../components/Modal";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { IconPlus, IconEdit, IconTrash, IconTag } from "../components/icons";
@@ -7,16 +8,14 @@ import { IconPlus, IconEdit, IconTrash, IconTag } from "../components/icons";
 const empty = { name: "", description: "" };
 
 export default function Categories({ notify }) {
-  const { getCategory, addCategory, updateCategory, deleteCategory, getProduct } = useContext(WarehouseContext);
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
+  const dispatch = useDispatch();
+  const categories = useSelector((state) => state.categories);
+  const products = useSelector((state) => state.products);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(empty);
   const [toDelete, setToDelete] = useState(null);
-
-  const load = () => { setCategories(getCategory()); setProducts(getProduct()); };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
   const openAdd = () => { setEditing(null); setForm(empty); setModalOpen(true); };
   const openEdit = (c) => { setEditing(c); setForm({ name: c.name, description: c.description || "" }); setModalOpen(true); };
@@ -24,19 +23,17 @@ export default function Categories({ notify }) {
   const submit = (e) => {
     e.preventDefault();
     const payload = { name: form.name.trim(), description: form.description.trim() };
-    if (editing) { updateCategory({ ...editing, ...payload }); notify("Category updated"); }
-    else { addCategory(payload); notify("Category added"); }
+    if (editing) { dispatch(updateCategory({ ...editing, ...payload })); notify("Category updated"); }
+    else { dispatch(addCategory(payload)); notify("Category added"); }
     setModalOpen(false);
-    load();
   };
 
   const countFor = (id) => products.filter((p) => p.categoryId === id).length;
 
   const confirmDelete = () => {
-    deleteCategory(toDelete.id);
+    dispatch(deleteCategory(toDelete.id));
     notify("Category deleted");
     setToDelete(null);
-    load();
   };
 
   return (

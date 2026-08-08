@@ -1,5 +1,6 @@
-import { useContext, useEffect, useState } from "react";
-import { WarehouseContext } from "../context/WarehouseContext";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addOrder, updateOrders, deleteOrder } from "../store/thunks";
 import Modal from "../components/Modal";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { IconPlus, IconEdit, IconTrash, IconOrders } from "../components/icons";
@@ -8,17 +9,15 @@ const STATUSES = ["Pending", "Completed", "Cancelled"];
 const emptyAdd = { productId: "", quantity: "", customerName: "", status: "Pending" };
 
 export default function Orders({ notify }) {
-  const { getOrder, addOrder, updateOrders, deleteOrder, getProduct } = useContext(WarehouseContext);
-  const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([]);
+  const dispatch = useDispatch();
+  const orders = useSelector((state) => state.orders);
+  const products = useSelector((state) => state.products);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyAdd);
   const [error, setError] = useState("");
   const [toDelete, setToDelete] = useState(null);
-
-  const load = () => { setOrders(getOrder()); setProducts(getProduct()); };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
   const productName = (id) => products.find((p) => p.id === id)?.name || "Deleted product";
 
@@ -30,29 +29,27 @@ export default function Orders({ notify }) {
     setError("");
     try {
       if (editing) {
-        updateOrders({ ...editing, customerName: form.customerName.trim(), status: form.status });
+        dispatch(updateOrders({ ...editing, customerName: form.customerName.trim(), status: form.status }));
         notify("Order updated");
       } else {
-        addOrder({
+        dispatch(addOrder({
           productId: Number(form.productId),
           quantity: Number(form.quantity),
           customerName: form.customerName.trim(),
           status: form.status,
-        });
+        }));
         notify("Order placed");
       }
       setModalOpen(false);
-      load();
     } catch (err) {
       setError(err.message);
     }
   };
 
   const confirmDelete = () => {
-    deleteOrder(toDelete.id);
+    dispatch(deleteOrder(toDelete.id));
     notify("Order deleted");
     setToDelete(null);
-    load();
   };
 
   const badgeClass = (status) =>

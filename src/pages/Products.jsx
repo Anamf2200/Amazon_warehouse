@@ -1,5 +1,6 @@
-import { useContext, useEffect, useState } from "react";
-import { WarehouseContext } from "../context/WarehouseContext";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addProduct, updateProduct, deleteProduct } from "../store/thunks";
 import Modal from "../components/Modal";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { IconPlus, IconEdit, IconTrash, IconSearch, IconBox } from "../components/icons";
@@ -7,28 +8,17 @@ import { IconPlus, IconEdit, IconTrash, IconSearch, IconBox } from "../component
 const empty = { name: "", sku: "", barcode: "", categoryId: "", supplierId: "", costPrice: "", sellingPrice: "", quantity: "" };
 
 export default function Products({ notify }) {
-  const {
-    getProduct, addProduct, updateProduct, deleteProduct,
-    getCategory, getSupplier,
-  } = useContext(WarehouseContext);
+  const dispatch = useDispatch();
+  const products = useSelector((state) => state.products);
+  const categories = useSelector((state) => state.categories);
+  const suppliers = useSelector((state) => state.suppliers);
 
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(empty);
   const [error, setError] = useState("");
   const [toDelete, setToDelete] = useState(null);
-
-  const load = () => {
-    setProducts(getProduct());
-    setCategories(getCategory());
-    setSuppliers(getSupplier());
-  };
-
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
   const openAdd = () => { setEditing(null); setForm(empty); setError(""); setModalOpen(true); };
   const openEdit = (p) => {
@@ -57,24 +47,22 @@ export default function Products({ notify }) {
     };
     try {
       if (editing) {
-        updateProduct({ ...editing, ...payload });
+        dispatch(updateProduct({ ...editing, ...payload }));
         notify("Product updated");
       } else {
-        addProduct(payload);
+        dispatch(addProduct(payload));
         notify("Product added");
       }
       setModalOpen(false);
-      load();
     } catch (err) {
       setError(err.message);
     }
   };
 
   const confirmDelete = () => {
-    deleteProduct(toDelete.id);
+    dispatch(deleteProduct(toDelete.id));
     notify("Product deleted");
     setToDelete(null);
-    load();
   };
 
   const catName = (id) => categories.find((c) => c.id === id)?.name || "—";
