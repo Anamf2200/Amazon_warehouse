@@ -38,13 +38,7 @@ import { stockIn as stockInService, stockOut as stockOutService } from "../servi
 import { wastage as wastageService } from "../services/wastage";
 import { getStockInReport, getStockOutReport, getWestageReport } from "../services/report";
 
-/**
- * These thunks are thin wrappers: all the actual business logic (validation,
- * localStorage reads/writes, stock deduction, profit/loss calculation) still
- * lives in src/services/*.js exactly as before. A thunk calls the matching
- * service function, and if it doesn't throw, re-reads the fresh data from
- * that service and pushes it into the Redux store so the UI stays in sync.
- */
+
 
 /* ----------------------------- Products ----------------------------- */
 
@@ -133,7 +127,7 @@ export const deleteOrder = (id) => (dispatch) => {
 /* ------------------------------ Wastage --------------------------------- */
 
 export const wastage = (productId, quantity) => (dispatch) => {
-  wastageService(productId, quantity); // throws "Insufficient stock"
+  wastageService(productId, quantity); 
   dispatch(setProducts(getProduct()));
   dispatch(setWastage(getWestageReport()));
 };
