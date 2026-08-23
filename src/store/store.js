@@ -6,6 +6,7 @@ import ordersReducer from "./slices/ordersSlice";
 import stockInReducer from "./slices/stockInSlice";
 import stockOutReducer from "./slices/stockOutSlice";
 import wastageReducer from "./slices/wastageSlice";
+import {userReducer} from '../reducers/userReducers'
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     stockIn: stockInReducer,
     stockOut: stockOutReducer,
     wastage: wastageReducer,
+    user:userReducer
   },
 });
 
